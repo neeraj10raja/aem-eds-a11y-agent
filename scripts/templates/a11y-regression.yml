@@ -1,0 +1,75 @@
+name: Accessibility Regression Detection
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'
+  push:
+    branches: ['main']
+    paths-ignore:
+      - '.github/baselines/a11y.json'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run (log only, no issues)'
+        required: false
+        default: 'false'
+        type: choice
+        options: ['false', 'true']
+      update_baseline:
+        description: 'Update accessibility baseline from current scan'
+        required: false
+        default: 'false'
+        type: choice
+        options: ['false', 'true']
+
+permissions:
+  contents: write
+  issues: write
+  models: read
+
+jobs:
+  a11y-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          package-manager-cache: false
+
+      - name: Install agent dependencies
+        run: npm ci
+        working-directory: a11y-agent
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+        working-directory: a11y-agent
+
+      - name: Validate agent syntax
+        run: |
+          for file in a11y-agent/*.js; do
+            node --check "$file"
+          done
+
+      - name: Run accessibility agent
+        run: |
+          if [ "${{ github.event.inputs.update_baseline }}" = "true" ]; then
+            node a11y-agent/index.js --update-baseline
+          else
+            node a11y-agent/index.js
+          fi
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          REPO_OWNER: ${{ github.repository_owner }}
+          REPO_NAME: ${{ github.event.repository.name }}
+          DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
+
+      - name: Commit updated accessibility baseline
+        if: ${{ success() && github.event.inputs.update_baseline == 'true' }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .github/baselines/a11y.json
+          git diff --cached --quiet || git commit -m "chore: update accessibility baseline [skip ci]"
+          git push

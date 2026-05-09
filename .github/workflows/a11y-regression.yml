@@ -1,0 +1,32 @@
+name: Accessibility Regression Detection
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+  models: read
+
+jobs:
+  a11y-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate agent syntax
+        run: |
+          for file in a11y-agent/*.js; do
+            node --check "$file"
+          done
+
+      - name: Test
+        run: npm test

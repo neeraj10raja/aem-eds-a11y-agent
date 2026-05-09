@@ -1,0 +1,30 @@
+{
+  "site_url": "https://main--repo--owner.aem.page",
+  "paths": ["/"],
+  "fail_on_impacts": ["critical", "serious"],
+  "lookback_hours": 48,
+  "default_branch": "main",
+  "ai_diagnosis_enabled": true,
+  "model": "gpt-4o",
+  "fixture_path": null,
+  "axe": {
+    "tags": ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa", "best-practice"],
+    "disabled_rules": []
+  },
+  "scan": {
+    "timeout_ms": 30000,
+    "wait_until": "domcontentloaded",
+    "post_load_delay_ms": 2000,
+    "concurrency": 3,
+    "viewport": {
+      "width": 1366,
+      "height": 900
+    }
+  },
+  "auth": {
+    "basic_username_env": null,
+    "basic_password_env": null,
+    "bearer_token_env": null,
+    "cookies_json_env": null
+  }
+}

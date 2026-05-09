@@ -1,0 +1,7 @@
+{
+  "type": "module",
+  "dependencies": {
+    "@axe-core/playwright": "^4.10.2",
+    "playwright": "^1.53.0"
+  }
+}

@@ -1,7 +1,26 @@
 {
   "name": "aem-eds-a11y-agent",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Accessibility regression detection and AI-assisted diagnosis for Adobe AEM Edge Delivery Services sites.",
+  "keywords": [
+    "aem",
+    "edge-delivery-services",
+    "accessibility",
+    "a11y",
+    "axe-core",
+    "playwright",
+    "github-action",
+    "wcag"
+  ],
+  "homepage": "https://github.com/neeraj10raja/aem-eds-a11y-agent#readme",
+  "bugs": {
+    "url": "https://github.com/neeraj10raja/aem-eds-a11y-agent/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/neeraj10raja/aem-eds-a11y-agent.git"
+  },
+  "author": "Neeraj Raja",
   "type": "module",
   "main": "a11y-agent/index.js",
   "scripts": {

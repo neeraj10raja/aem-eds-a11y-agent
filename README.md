@@ -28,7 +28,79 @@ accessibility regressions often appear after small block, CSS, or content
 changes. This agent catches those regressions in the same GitHub workflow where
 developers already review code.
 
-## Setup
+## Install Into An EDS Repo
+
+Recommended path: use the published action from your EDS repo.
+
+```yaml
+name: Accessibility Regression Detection
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+    inputs:
+      update_baseline:
+        description: 'Update baseline from current scan'
+        type: choice
+        options: ['false', 'true']
+        default: 'false'
+      dry_run:
+        description: 'Log only, no issues opened'
+        type: choice
+        options: ['false', 'true']
+        default: 'false'
+
+permissions:
+  contents: write
+  issues: write
+  models: read
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: neeraj10raja/aem-eds-a11y-agent@v1
+        with:
+          update-baseline: ${{ github.event.inputs.update_baseline || 'false' }}
+          dry-run: ${{ github.event.inputs.dry_run || 'false' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+For platform teams that prefer reusable workflows:
+
+```yaml
+jobs:
+  scan:
+    uses: neeraj10raja/aem-eds-a11y-agent/.github/workflows/scan.yml@v1
+    with:
+      update-baseline: ${{ github.event.inputs.update_baseline || 'false' }}
+```
+
+The reusable workflow also commits the updated baseline back to your repo when
+`update-baseline=true`.
+
+Both paths expect two files in your EDS repo:
+
+- `a11y-agent.config.json` at the repo root (see [the example](a11y-agent.config.example.json))
+- `.github/baselines/a11y.json` (initially `{}`)
+
+The built-in `GITHUB_TOKEN` is used automatically. No personal GitHub token is
+needed.
+
+### First Run
+
+1. Commit the config and an empty `.github/baselines/a11y.json`.
+2. Enable **Actions read/write workflow permissions** in the repo settings.
+3. Run the workflow manually with `update_baseline=true` to seed the baseline.
+4. Review and commit the populated baseline file.
+
+### Air-Gapped Install
+
+If your enterprise does not allow third-party GitHub Actions, copy the agent
+into the EDS repo:
 
 ```bash
 git clone https://github.com/neeraj10raja/aem-eds-a11y-agent
@@ -53,15 +125,6 @@ a11y-agent.config.json
 .github/workflows/a11y-regression.yml
 .github/baselines/a11y.json
 ```
-
-## GitHub Setup
-
-1. Enable **Actions read/write workflow permissions**.
-2. Run **Accessibility Regression Detection** manually with `update_baseline=true`.
-3. Review and commit `.github/baselines/a11y.json`.
-
-The built-in `GITHUB_TOKEN` is used automatically. No personal GitHub token is
-needed.
 
 ## Configuration
 

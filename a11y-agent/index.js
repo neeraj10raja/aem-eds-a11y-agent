@@ -14,9 +14,17 @@ import {
 import { scanPages } from './scan.js';
 import { validatePaths } from './path-utils.js';
 
-const CONFIG_PATH = 'a11y-agent.config.json';
-const BASELINE_PATH = '.github/baselines/a11y.json';
+const DEFAULT_CONFIG_PATH = 'a11y-agent.config.json';
+const DEFAULT_BASELINE_PATH = '.github/baselines/a11y.json';
 const A11Y_LABEL = 'a11y-regression';
+
+function configPath() {
+  return process.env.A11Y_CONFIG_PATH || DEFAULT_CONFIG_PATH;
+}
+
+function baselinePath() {
+  return process.env.A11Y_BASELINE_PATH || DEFAULT_BASELINE_PATH;
+}
 
 const DEFAULT_CONFIG = {
   site_url: null,
@@ -50,10 +58,11 @@ const DEFAULT_CONFIG = {
 };
 
 function loadConfig() {
-  if (!existsSync(CONFIG_PATH)) {
-    throw new Error(`Missing ${CONFIG_PATH}. Run scripts/install.js or copy a11y-agent.config.example.json.`);
+  const path = configPath();
+  if (!existsSync(path)) {
+    throw new Error(`Missing ${path}. Run scripts/install.js or copy a11y-agent.config.example.json.`);
   }
-  const parsed = JSON.parse(readFileSync(CONFIG_PATH, 'utf8'));
+  const parsed = JSON.parse(readFileSync(path, 'utf8'));
   const merged = {
     ...DEFAULT_CONFIG,
     ...parsed,
@@ -236,7 +245,9 @@ async function main() {
     owner, repo, token, dryRun,
   } = context;
   const siteBase = buildSiteBase(config, owner, repo);
-  const updateBaseline = process.argv.includes('--update-baseline');
+  const updateBaseline = process.argv.includes('--update-baseline')
+    || process.env.A11Y_UPDATE_BASELINE === 'true';
+  const baselineFile = baselinePath();
 
   console.log(`[a11y-agent] site=${siteBase} paths=${config.paths.join(',')}${dryRun ? ' DRY_RUN' : ''}`);
   const pageResults = await scanPages(siteBase, config.paths, config);
@@ -249,16 +260,16 @@ async function main() {
   });
 
   if (updateBaseline) {
-    saveBaseline(BASELINE_PATH, pageResults);
-    console.log('[a11y-agent] Baseline updated. Commit .github/baselines/a11y.json to persist.');
+    saveBaseline(baselineFile, pageResults);
+    console.log(`[a11y-agent] Baseline updated. Commit ${baselineFile} to persist.`);
     return;
   }
 
-  const baseline = loadBaseline(BASELINE_PATH);
+  const baseline = loadBaseline(baselineFile);
   if (Object.keys(baseline).length === 0) {
     console.log('[a11y-agent] No baseline found — saving current accessibility state.');
-    if (!dryRun) saveBaseline(BASELINE_PATH, pageResults);
-    console.log('[a11y-agent] Commit .github/baselines/a11y.json to start tracking regressions.');
+    if (!dryRun) saveBaseline(baselineFile, pageResults);
+    console.log(`[a11y-agent] Commit ${baselineFile} to start tracking regressions.`);
     return;
   }
 

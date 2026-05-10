@@ -1,0 +1,50 @@
+name: EDS Accessibility Regression Scan
+
+on:
+  workflow_call:
+    inputs:
+      config-path:
+        type: string
+        required: false
+        default: a11y-agent.config.json
+      baseline-path:
+        type: string
+        required: false
+        default: .github/baselines/a11y.json
+      update-baseline:
+        type: string
+        required: false
+        default: 'false'
+      dry-run:
+        type: string
+        required: false
+        default: 'false'
+
+permissions:
+  contents: write
+  issues: write
+  models: read
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: neeraj10raja/aem-eds-a11y-agent@v1
+        with:
+          config-path: ${{ inputs.config-path }}
+          baseline-path: ${{ inputs.baseline-path }}
+          update-baseline: ${{ inputs.update-baseline }}
+          dry-run: ${{ inputs.dry-run }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Commit updated accessibility baseline
+        if: ${{ success() && inputs.update-baseline == 'true' }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add "${{ inputs.baseline-path }}"
+          git diff --cached --quiet || git commit -m "chore: update accessibility baseline [skip ci]"
+          git push

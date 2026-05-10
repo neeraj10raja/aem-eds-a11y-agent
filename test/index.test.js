@@ -1,4 +1,7 @@
 import assert from 'node:assert/strict';
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import test from 'node:test';
 
 import {
@@ -8,6 +11,7 @@ import {
   impactSummary,
   issueFingerprint,
   issueTitleFor,
+  loadConfig,
   violationTable,
 } from '../a11y-agent/index.js';
 
@@ -108,6 +112,22 @@ test('buildIssueBody includes violation details, disabled rules, and diagnosis',
   assert.match(body, /color-contrast/);
   assert.match(body, /Disabled axe rules: `region`/);
   assert.match(body, /Human review required/);
+});
+
+test('loadConfig reads A11Y_CONFIG_PATH when provided by the action', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'a11y-agent-config-'));
+  const file = join(dir, 'custom.config.json');
+  writeFileSync(file, JSON.stringify({ paths: ['/custom'], lookback_hours: 12 }));
+  process.env.A11Y_CONFIG_PATH = file;
+
+  try {
+    const config = loadConfig();
+    assert.deepEqual(config.paths, ['/custom']);
+    assert.equal(config.lookback_hours, 12);
+    assert.equal(config.scan.wait_until, DEFAULT_CONFIG.scan.wait_until);
+  } finally {
+    delete process.env.A11Y_CONFIG_PATH;
+  }
 });
 
 test('buildIssueBody makes scan failures explicit', () => {

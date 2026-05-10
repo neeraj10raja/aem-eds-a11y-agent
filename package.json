@@ -1,6 +1,6 @@
 {
   "name": "aem-eds-a11y-agent",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Accessibility regression detection and AI-assisted diagnosis for Adobe AEM Edge Delivery Services sites.",
   "keywords": [
     "aem",

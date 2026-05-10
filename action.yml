@@ -1,5 +1,5 @@
 name: EDS Accessibility Regression Agent
-description: Run axe-core accessibility scans against AEM Edge Delivery Services pages, compare against a committed baseline, and open issues for new critical/serious regressions.
+description: Accessibility regression detection for Adobe AEM Edge Delivery Services using axe-core.
 author: Neeraj Raja
 
 branding:

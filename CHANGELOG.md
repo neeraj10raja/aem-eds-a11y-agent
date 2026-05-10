@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.1] - 2026-05-10
+
+### Fixed
+
+- Shorten `action.yml` description to fit the GitHub Marketplace 125-character limit. No behavior changes.
+
 ## [0.2.0] - 2026-05-10
 
 ### Added
